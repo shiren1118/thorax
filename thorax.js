@@ -596,8 +596,9 @@
       var attributes = options.attributes || {};
       
       //callback has context of element
+      var self = this;
       eachNamedInput.call(this, options, function() {
-        var value = getInputValue.call(this);
+        var value = self.getInputValue(this);
         if (typeof value !== 'undefined') {
           objectAndKeyFromAttributesAndName(attributes, this.name, {mode: 'serialize'}, function(object, key) {
             object[key] = value;
@@ -623,7 +624,28 @@
       callback && callback.call(this,attributes);
       return attributes;
     },
-  
+
+    //called with context of input
+    getInputValue: function(element) {
+      if (element.type === 'checkbox' || element.type === 'radio') {
+        if ($(element).attr('data-onOff')) {
+          return element.checked;
+        } else if (element.checked) {
+          return element.value;
+        }
+      } else if (element.multiple === true) {
+        var values = [];
+        $('option', element).each(function(){
+          if (this.selected) {
+            values.push(this.value);
+          }
+        });
+        return values;
+      } else {
+        return element.value;
+      }
+    },
+
     _preventDuplicateSubmission: function(event, callback) {
       event.preventDefault();
 
@@ -959,27 +981,6 @@
 
   function resetSubmitState() {
     this.$('form').removeAttr('data-submit-wait');
-  };
-
-  //called with context of input
-  function getInputValue() {
-    if (this.type === 'checkbox' || this.type === 'radio') {
-      if ($(this).attr('data-onOff')) {
-        return this.checked;
-      } else if (this.checked) {
-        return this.value;
-      }
-    } else if (this.multiple === true) {
-      var values = [];
-      $('option',this).each(function(){
-        if (this.selected) {
-          values.push(this.value);
-        }
-      });
-      return values;
-    } else {
-      return this.value;
-    }
   };
 
   //calls a callback with the correct object fragment and key from a compound name
