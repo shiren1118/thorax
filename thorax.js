@@ -597,8 +597,9 @@
       
       //callback has context of element
       var self = this;
+      var inputRetrievalContext = {};
       eachNamedInput.call(this, options, function() {
-        var value = self.getInputValue(this);
+        var value = self.getInputValue.call(inputRetrievalContext, this);
         if (typeof value !== 'undefined') {
           objectAndKeyFromAttributesAndName(attributes, this.name, {mode: 'serialize'}, function(object, key) {
             object[key] = value;
@@ -627,11 +628,21 @@
 
     //called with context of input
     getInputValue: function(element) {
-      if (element.type === 'checkbox' || element.type === 'radio') {
-        if ($(element).attr('data-onOff')) {
+      if (element.type === 'checkbox') {
+        var onOff = $(element).attr('data-onOff');
+        if (onOff) {
           return element.checked;
         } else if (element.checked) {
           return element.value;
+        }
+      } else if (element.type === 'radio') {
+        var onOff = $(element).attr('data-onOff');
+        if (element.checked) {
+          if (onOff) {
+            return element.value === 'true';
+          } else if (element.checked) {
+            return element.value;
+          }
         }
       } else if (element.multiple === true) {
         var values = [];
